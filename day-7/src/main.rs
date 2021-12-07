@@ -12,14 +12,8 @@ fn main() {
             crab_idx,
             crabs
                 .iter()
-                .map(|c| {
-                    if c >= &(crab_idx as i32) {
-                        c - crab_idx as i32
-                    } else {
-                        crab_idx as i32 - c
-                    }
-                })
-                .map(|steps| compute_cost(steps))
+                .map(|c| (c - crab_idx as i32).abs())
+                .map(|steps| (1..steps + 1).fold(0, |cost, i| cost + i))
                 .sum(),
         );
     });
@@ -42,12 +36,4 @@ pub fn read_data(path: &str) -> Vec<i32> {
 pub fn read_lines(path: &str) -> Result<Vec<String>, io::Error> {
     let file = File::open(path)?;
     io::BufReader::new(file).lines().collect()
-}
-
-pub fn compute_cost(steps: i32) -> i32 {
-    let mut cost = 0;
-    for i in 1..steps + 1 {
-        cost = cost + i;
-    }
-    cost
 }
