@@ -8,33 +8,31 @@ pub struct DigitSequence {
     part2: Vec<String>,
 }
 
-#[derive(Debug)]
-pub struct DigitInfo {
-    count: u32,
-    unique_seg_nb: bool,
-}
-
 fn main() {
-    let mut digits_part1: HashMap<u8, DigitInfo> = HashMap::new();
+    let mut digits_part1: HashMap<u8, u16> = HashMap::new();
     let sequenses = read_data("./input-full.txt");
     for sequence in sequenses.clone() {
         digits_part1 = extract_unique_digits_count(digits_part1, sequence.part2);
     }
     println!(
         "result part 1 is {}",
-        digits_part1
-            .iter()
-            .filter(|d| d.1.unique_seg_nb)
-            .map(|d| d.1.count)
-            .sum::<u32>()
+        digits_part1.iter().map(|d| d.1).sum::<u16>()
     );
 
     let mut decoded_sequences: Vec<String> = Vec::new();
     for sequence in sequenses.clone() {
-        let digits_patterns = extract_digits_pattern(sequence.part1);
-        decoded_sequences.push(decode_sequence(sequence.part2, digits_patterns.clone()));
+        decoded_sequences.push(decode_sequence(
+            sequence.part2,
+            extract_digits_pattern(sequence.part1),
+        ));
     }
-    println!("Result part2 is {}", decoded_sequences.iter().map(|s| s.parse::<u32>().unwrap()).sum::<u32>());
+    println!(
+        "Result part2 is {}",
+        decoded_sequences
+            .iter()
+            .map(|s| s.parse::<u32>().unwrap())
+            .sum::<u32>()
+    );
 }
 
 pub fn read_data(path: &str) -> Vec<DigitSequence> {
@@ -55,7 +53,7 @@ pub fn read_lines(path: &str) -> Result<Vec<String>, io::Error> {
 }
 
 /**
- * Include unique patter fist
+ * include unique pattern first
  * then use unique pattern to deduce others by matching segments
  */
 pub fn extract_digits_pattern(sequence: Vec<String>) -> HashMap<u8, String> {
@@ -81,31 +79,30 @@ pub fn extract_digits_pattern(sequence: Vec<String>) -> HashMap<u8, String> {
             {
                 digits_patterns.insert(0, packet);
             } else if check_pattern(packet.clone(), digits_patterns[&1].clone(), 1)
-            && check_pattern(packet.clone(), digits_patterns[&7].clone(), 2)
-            && check_pattern(packet.clone(), digits_patterns[&4].clone(), 3)
+                && check_pattern(packet.clone(), digits_patterns[&7].clone(), 2)
+                && check_pattern(packet.clone(), digits_patterns[&4].clone(), 3)
             {
                 digits_patterns.insert(6, packet);
             } else if check_pattern(packet.clone(), digits_patterns[&7].clone(), 3)
-            && check_pattern(packet.clone(), digits_patterns[&4].clone(), 4)
+                && check_pattern(packet.clone(), digits_patterns[&4].clone(), 4)
             {
                 digits_patterns.insert(9, packet);
             }
         }
     }
-    
     for packet in sequence.clone() {
         if packet.len() == 5 {
             if check_pattern(packet.clone(), digits_patterns[&6].clone(), 5) {
                 digits_patterns.insert(5, packet);
             } else if check_pattern(packet.clone(), digits_patterns[&1].clone(), 2)
-            && check_pattern(packet.clone(), digits_patterns[&7].clone(), 3)
-            && check_pattern(packet.clone(), digits_patterns[&4].clone(), 3)
+                && check_pattern(packet.clone(), digits_patterns[&7].clone(), 3)
+                && check_pattern(packet.clone(), digits_patterns[&4].clone(), 3)
             {
                 digits_patterns.insert(3, packet);
             } else if check_pattern(packet.clone(), digits_patterns[&1].clone(), 1)
-            && check_pattern(packet.clone(), digits_patterns[&7].clone(), 2)
-            && check_pattern(packet.clone(), digits_patterns[&4].clone(), 2)
-            && check_pattern(packet.clone(), digits_patterns[&6].clone(), 4)
+                && check_pattern(packet.clone(), digits_patterns[&7].clone(), 2)
+                && check_pattern(packet.clone(), digits_patterns[&4].clone(), 2)
+                && check_pattern(packet.clone(), digits_patterns[&6].clone(), 4)
             {
                 digits_patterns.insert(2, packet);
             }
@@ -117,47 +114,41 @@ pub fn extract_digits_pattern(sequence: Vec<String>) -> HashMap<u8, String> {
 pub fn decode_sequence(sequence: Vec<String>, digits_patterns: HashMap<u8, String>) -> String {
     let mut decoded_sequence: String = String::from("");
     for packet in sequence {
-        let digit = digits_patterns.iter().find(|p| {
-            packet.len() == p.1.len() && check_pattern(packet.clone(), p.1.to_string(), packet.len() as u8)
-        }).unwrap();
+        let digit = digits_patterns
+            .iter()
+            .find(|p| {
+                packet.len() == p.1.len()
+                    && check_pattern(packet.clone(), p.1.to_string(), packet.len() as u8)
+            })
+            .unwrap();
         decoded_sequence.push_str(&digit.0.to_string());
     }
     decoded_sequence
 }
 
 pub fn extract_unique_digits_count(
-    mut digits: HashMap<u8, DigitInfo>,
+    mut digits: HashMap<u8, u16>,
     sequence: Vec<String>,
-) -> HashMap<u8, DigitInfo> {
+) -> HashMap<u8, u16> {
     for packet in sequence {
         if packet.len() == 2 {
-            digits = upsert_digit_count(digits, 1, true);
+            digits = upsert_digit_count(digits, 1);
         } else if packet.len() == 4 {
-            digits = upsert_digit_count(digits, 4, true);
+            digits = upsert_digit_count(digits, 4);
         } else if packet.len() == 3 {
-            digits = upsert_digit_count(digits, 7, true);
+            digits = upsert_digit_count(digits, 7);
         } else if packet.len() == 7 {
-            digits = upsert_digit_count(digits, 8, true);
+            digits = upsert_digit_count(digits, 8);
         }
     }
     digits
 }
 
-pub fn upsert_digit_count(
-    mut map: HashMap<u8, DigitInfo>,
-    key: u8,
-    unique_seg_nb: bool,
-) -> HashMap<u8, DigitInfo> {
+pub fn upsert_digit_count(mut map: HashMap<u8, u16>, key: u8) -> HashMap<u8, u16> {
     if map.contains_key(&key) {
-        (*map.get_mut(&key).unwrap()).count += 1;
+        (*map.get_mut(&key).unwrap()) += 1;
     } else {
-        map.insert(
-            key,
-            DigitInfo {
-                count: 1,
-                unique_seg_nb,
-            },
-        );
+        map.insert(key, 1);
     }
     map
 }
