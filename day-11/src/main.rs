@@ -1,39 +1,28 @@
 use std::fs::File;
 use std::io::{self, BufRead};
 
-#[derive(Debug, Clone)]
-pub struct Point {
-    x: i32,
-    y: i32,
-}
-
 fn main() {
     let mut map = read_data("./input-full.txt");
+    let mut map2 = map.clone();
     let mut total_flash_count = 0;
-    
-    let steps = 195;
-    
     // part 1
-    (1..steps + 1).for_each(|step| {
-        total_flash_count += run_step(step, &mut map);
-    });
-    println!("total_flash_count {}", total_flash_count);
-    
+    (1..101).for_each(|step| total_flash_count += run_step(step, &mut map));
+    println!("total_flash_count part 1 {}", total_flash_count);
     // part 2
-    let mut map2 = read_data("./input-full.txt");
     let mut step: usize = 0;
     while !is_all_light_flashes(map2.clone()) {
         step += 1;
         run_step(step, &mut map2);
     }
+    println!("number of steps part 2 : {}", step);
 }
 
-pub fn read_data(path: &str) -> Vec<Vec<i32>> {
+pub fn read_data(path: &str) -> Vec<Vec<i16>> {
     let mut map = Vec::new();
     for line in read_lines(path).unwrap() {
         map.push(
             line.chars()
-                .map(|n| n.to_string().parse::<i32>().unwrap())
+                .map(|n| n.to_string().parse::<i16>().unwrap())
                 .collect(),
         );
     }
@@ -45,20 +34,20 @@ pub fn read_lines(path: &str) -> Result<Vec<String>, io::Error> {
     io::BufReader::new(file).lines().collect()
 }
 
-pub fn run_step(step: usize, map: &mut Vec<Vec<i32>>) -> u32 {
+pub fn run_step(_step: usize, map: &mut Vec<Vec<i16>>) -> u16 {
     increase_points(map);
     let mut flash_count_step = 0;
     for y_pos in 0..map.len() {
         for x_pos in 0..map[0].len() {
-            flash_count_step += flash_point(y_pos as i32, x_pos as i32, map);
+            flash_count_step += flash_point(y_pos as i16, x_pos as i16, map);
         }
     }
-    println!("step {} flash_count_step {}", step, flash_count_step);
-    print_map(map.clone());
+    // println!("step {} flash_count_step {}", step, flash_count_step);
+    // print_map(map.clone());
     flash_count_step
 }
 
-pub fn increase_points(map: &mut Vec<Vec<i32>>) {
+pub fn increase_points(map: &mut Vec<Vec<i16>>) {
     for y in 0..map.len() {
         for x in 0..map[0].len() {
             map[y][x] += 1;
@@ -66,7 +55,7 @@ pub fn increase_points(map: &mut Vec<Vec<i32>>) {
     }
 }
 
-pub fn flash_point(xpos: i32, ypos: i32, map: &mut Vec<Vec<i32>>) -> u32 {
+pub fn flash_point(xpos: i16, ypos: i16, map: &mut Vec<Vec<i16>>) -> u16 {
     let mut flash_count = 0;
     if map[ypos as usize][xpos as usize] > 9 {
         flash_count += 1;
@@ -83,11 +72,11 @@ pub fn flash_point(xpos: i32, ypos: i32, map: &mut Vec<Vec<i32>>) -> u32 {
     flash_count
 }
 
-pub fn flash_point_at_pos(xpos: i32, ypos: i32, map: &mut Vec<Vec<i32>>) -> u32 {
+pub fn flash_point_at_pos(xpos: i16, ypos: i16, map: &mut Vec<Vec<i16>>) -> u16 {
     let mut flash_count = 0;
     let max_x = map[0].len() - 1;
     let max_y = map.len() - 1;
-    let point_exist = xpos >= 0 && xpos <= max_x as i32 && ypos >= 0 && ypos <= max_y as i32;
+    let point_exist = xpos >= 0 && xpos <= max_x as i16 && ypos >= 0 && ypos <= max_y as i16;
     if point_exist && map[ypos as usize][xpos as usize] != 0 {
         map[ypos as usize][xpos as usize] += 1;
         flash_count += flash_point(xpos, ypos, map);
@@ -95,7 +84,7 @@ pub fn flash_point_at_pos(xpos: i32, ypos: i32, map: &mut Vec<Vec<i32>>) -> u32 
     flash_count
 }
 
-pub fn print_map(map: Vec<Vec<i32>>) {
+pub fn print_map(map: Vec<Vec<i16>>) {
     for line in map {
         println!(
             "{}",
@@ -105,6 +94,8 @@ pub fn print_map(map: Vec<Vec<i32>>) {
     }
 }
 
-pub fn is_all_light_flashes(map: Vec<Vec<i32>>) -> bool {
-    map.iter().fold(0, |sum_lines, line| sum_lines + line.iter().fold(0, |sum_line, p| sum_line + p)) == 0
+pub fn is_all_light_flashes(map: Vec<Vec<i16>>) -> bool {
+    map.iter().fold(0, |sum_lines, line| {
+        sum_lines + line.iter().fold(0, |sum_line, p| sum_line + p)
+    }) == 0
 }
