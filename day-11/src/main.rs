@@ -17,12 +17,12 @@ fn main() {
     println!("number of steps part 2 : {}", step);
 }
 
-pub fn read_data(path: &str) -> Vec<Vec<i16>> {
+pub fn read_data(path: &str) -> Vec<Vec<i8>> {
     let mut map = Vec::new();
     for line in read_lines(path).unwrap() {
         map.push(
             line.chars()
-                .map(|n| n.to_string().parse::<i16>().unwrap())
+                .map(|n| n.to_string().parse::<i8>().unwrap())
                 .collect(),
         );
     }
@@ -34,12 +34,12 @@ pub fn read_lines(path: &str) -> Result<Vec<String>, io::Error> {
     io::BufReader::new(file).lines().collect()
 }
 
-pub fn run_step(_step: usize, map: &mut Vec<Vec<i16>>) -> u16 {
+pub fn run_step(_step: usize, map: &mut Vec<Vec<i8>>) -> u16 {
     increase_points(map);
     let mut flash_count_step = 0;
     for y_pos in 0..map.len() {
         for x_pos in 0..map[0].len() {
-            flash_count_step += flash_point(y_pos as i16, x_pos as i16, map);
+            flash_count_step += flash_point(y_pos as i8, x_pos as i8, map);
         }
     }
     // println!("step {} flash_count_step {}", step, flash_count_step);
@@ -47,7 +47,7 @@ pub fn run_step(_step: usize, map: &mut Vec<Vec<i16>>) -> u16 {
     flash_count_step
 }
 
-pub fn increase_points(map: &mut Vec<Vec<i16>>) {
+pub fn increase_points(map: &mut Vec<Vec<i8>>) {
     for y in 0..map.len() {
         for x in 0..map[0].len() {
             map[y][x] += 1;
@@ -55,7 +55,7 @@ pub fn increase_points(map: &mut Vec<Vec<i16>>) {
     }
 }
 
-pub fn flash_point(xpos: i16, ypos: i16, map: &mut Vec<Vec<i16>>) -> u16 {
+pub fn flash_point(xpos: i8, ypos: i8, map: &mut Vec<Vec<i8>>) -> u16 {
     let mut flash_count = 0;
     if map[ypos as usize][xpos as usize] > 9 {
         flash_count += 1;
@@ -72,11 +72,11 @@ pub fn flash_point(xpos: i16, ypos: i16, map: &mut Vec<Vec<i16>>) -> u16 {
     flash_count
 }
 
-pub fn flash_point_at_pos(xpos: i16, ypos: i16, map: &mut Vec<Vec<i16>>) -> u16 {
+pub fn flash_point_at_pos(xpos: i8, ypos: i8, map: &mut Vec<Vec<i8>>) -> u16 {
     let mut flash_count = 0;
     let max_x = map[0].len() - 1;
     let max_y = map.len() - 1;
-    let point_exist = xpos >= 0 && xpos <= max_x as i16 && ypos >= 0 && ypos <= max_y as i16;
+    let point_exist = xpos >= 0 && xpos <= max_x as i8 && ypos >= 0 && ypos <= max_y as i8;
     if point_exist && map[ypos as usize][xpos as usize] != 0 {
         map[ypos as usize][xpos as usize] += 1;
         flash_count += flash_point(xpos, ypos, map);
@@ -84,7 +84,7 @@ pub fn flash_point_at_pos(xpos: i16, ypos: i16, map: &mut Vec<Vec<i16>>) -> u16 
     flash_count
 }
 
-pub fn print_map(map: Vec<Vec<i16>>) {
+pub fn print_map(map: Vec<Vec<i8>>) {
     for line in map {
         println!(
             "{}",
@@ -94,7 +94,7 @@ pub fn print_map(map: Vec<Vec<i16>>) {
     }
 }
 
-pub fn is_all_light_flashes(map: Vec<Vec<i16>>) -> bool {
+pub fn is_all_light_flashes(map: Vec<Vec<i8>>) -> bool {
     map.iter().fold(0, |sum_lines, line| {
         sum_lines + line.iter().fold(0, |sum_line, p| sum_line + p)
     }) == 0
