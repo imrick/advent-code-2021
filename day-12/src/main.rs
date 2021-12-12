@@ -39,12 +39,7 @@ pub fn visit_cave(
     if cave_id != END_ID {
         let cave = caves.get(cave_id).unwrap();
         for link in cave.links.clone() {
-            if !is_lower_case(&link)
-                || current_path
-                    .iter()
-                    .find(|c| c.to_string() == link)
-                    .is_none()
-            {
+            if can_be_visited(&link, current_path) {
                 let mut new_path: Vec<String> = current_path.clone();
                 new_path.push(link.clone());
                 visit_cave(caves, &link, &new_path, visited_paths);
@@ -91,4 +86,21 @@ pub fn register_caves_relation(id: &str, relation: String, caves: &mut HashMap<S
 pub fn is_lower_case(test: &str) -> bool {
     let reg = Regex::new(r"[a-z]+").unwrap();
     reg.is_match(test)
+}
+
+pub fn can_be_visited(link: &str, path: &Vec<String>) -> bool {
+    let can_visit_twice = path
+        .clone()
+        .into_iter()
+        .filter(|c| c != START_ID && c != END_ID && is_lower_case(&c))
+        .fold(HashMap::new(), |mut dict: HashMap<String, i8>, c| {
+            let entry_count = dict.entry(c).or_insert(0);
+            *entry_count += 1;
+            dict
+        })
+        .into_iter()
+        .fold(true, |result, entry| result && entry.1 < 2);
+    let nb_visit = path.iter().filter(|c| c.to_string() == link).count();
+    link != START_ID
+        && (!is_lower_case(&link) || nb_visit == 0 || (nb_visit < 2 && can_visit_twice))
 }
